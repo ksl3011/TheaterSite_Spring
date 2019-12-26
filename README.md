@@ -7,8 +7,7 @@ Sunnyside Theater
 * 기간: 2019.8 ~ 10 (약 10주)
 * 참여인원: 총 6명
 * AWS: [sunnyside theater](http://ec2-13-209-5-35.ap-northeast-2.compute.amazonaws.com:8080/SUNNYSIDE_MYSQL/main/main.do)
-* (관리자아이디로 로그인하여 모든 컨텐츠를 보실 수 있습니다.)
-(admin / 123)
+* (관리자아이디로 로그인하여 모든 컨텐츠를 보실 수 있습니다. admin / 123)
 
 ---
 개발 Platform
