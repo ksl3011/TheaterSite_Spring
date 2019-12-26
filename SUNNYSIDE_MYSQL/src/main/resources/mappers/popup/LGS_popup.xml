@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="popup">
+
+	<select id="do_save" parameterType="kr.co.sunnyside.popup.service.PopupVO">
+		INSERT INTO POPUP_CONTROL (
+			title
+			,contents
+			,enable
+		) VALUES (
+		    #{title, jdbcType=VARCHAR}
+		    ,#{contents, jdbcType=VARCHAR}
+		    ,#{enable, jdbcType=VARCHAR}
+		)
+	</select>
+	
+	<select id="do_retrieve" resultType="kr.co.sunnyside.popup.service.PopupVO">
+		SELECT
+			T.RNUM as num
+			,T.title as title
+			,T.contents as contents
+			,T.enable as enable
+		FROM( 
+		    SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS RNUM, A.*
+		    FROM(
+		         SELECT *
+		         FROM POPUP_CONTROL
+		        )A
+		    )T
+		    WHERE T.RNUM = 1
+            AND (<![CDATA[@rownum:=0]]>)=0
+	</select>
+</mapper>

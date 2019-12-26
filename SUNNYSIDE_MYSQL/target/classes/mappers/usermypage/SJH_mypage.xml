@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>	
+<!DOCTYPE mapper	
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"	
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">	
+<mapper namespace="kr.co.sunnyside.usermypage">
+
+	
+	
+	<!-- 회원 자동 등업 -->
+	<update id="tx_upgradeLevels" parameterType="SJH_MypageVO">
+		UPDATE USER_INFO
+		SET
+		    user_level = #{userLevel,jdbcType=VARCHAR}
+		WHERE
+		    user_id = #{userId,jdbcType=VARCHAR}
+	</update>
+	
+	
+	
+	<!-- 전체 회원 조회 -->
+	<select id="do_getAll" resultType="SJH_MypageVO">
+		SELECT
+		    user_id as userId,
+		    passwd,
+		    user_name as userName,
+		    email as email,
+		    user_level as userLevel,
+		    point,
+		    cellphone as cellphone,
+		    birth,
+		    reg_dt as regDt,
+		    total_pay as totalPay,
+		    flag
+		FROM
+		    USER_INFO
+	</select>
+	
+	
+
+	<!-- 회원정보 수정 -->
+	<update id="do_update" parameterType="SJH_MypageVO">
+		UPDATE USER_INFO
+		SET
+		    passwd = #{passwd,jdbcType=VARCHAR},
+		    user_name = #{userName,jdbcType=VARCHAR},
+		    birth = #{birth,jdbcType=VARCHAR},
+		    cellphone = #{cellphone,jdbcType=VARCHAR},
+		    email = #{email,jdbcType=VARCHAR}
+		WHERE
+		    user_id = #{userId,jdbcType=VARCHAR}
+	</update>
+	
+	
+	
+	<!-- 회원선택(수정할 때 정보 가져가기) -->
+	<select id="do_selectOne" parameterType="SJH_MypageVO" resultType="SJH_MypageVO">
+        SELECT										
+		    user_id as userId,
+		    passwd,
+		    user_name as userName,
+		    email as email,
+		    cellphone as cellphone,
+		    birth,
+		    flag
+		FROM                                     
+		    USER_INFO                                
+		WHERE user_id = #{userId,jdbcType=VARCHAR} 
+	</select>
+	
+	
+
+	<!-- 회원탈퇴 -->
+	<delete id="do_delete" parameterType="SJH_MypageVO">
+		DELETE FROM USER_INFO
+		WHERE
+		    user_id = #{userId,jdbcType=VARCHAR}
+		    AND passwd = #{passwd,jdbcType=VARCHAR}	
+	</delete>
+
+
+</mapper>

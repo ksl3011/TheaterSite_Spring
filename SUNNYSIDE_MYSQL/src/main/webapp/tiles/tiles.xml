@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+ 
+ 
+<tiles-definitions> 
+    <!-- 레이아웃을 적용하는화면-->
+    <definition name="basede_definition" template="/tiles/layouts/basedLayout.jsp">
+        <put-attribute name="title" value="" />
+        <put-attribute name="header" value="/tiles/views/header.jsp" />
+        <put-attribute name="body" value="" />
+        <put-attribute name="footer" value="/tiles/views/footer.jsp" />
+        <put-attribute name="menu" value="" />
+    </definition>
+    
+    <!-- 메인 레이아웃 -->
+    <definition name="main_definition" template="/tiles/layouts/mainLayout.jsp">
+        <put-attribute name="title" value="" />
+        <put-attribute name="header" value="/tiles/views/header.jsp" />
+        <put-attribute name="body" value="" />
+        <put-attribute name="footer" value="/tiles/views/footer.jsp" />
+    </definition>
+    
+    <!-- main -->    
+    <definition name="main/*" extends="main_definition">
+      <put-attribute name="body" value="/main/main.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>메인" />
+    </definition>
+        
+    <!-- movie -->    
+    <definition name="movie/*" extends="basede_definition">
+      <put-attribute name="body" value="/movie/{1}.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>상세보기" />
+      <put-attribute name="menu" value="DETAIL" />
+    </definition>
+    
+    <!-- boxoffice -->    
+    <definition name="boxoffice/*" extends="basede_definition">
+      <put-attribute name="body" value="/boxoffice/{1}.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>박스오피스리스트" />
+      <put-attribute name="menu" value="BOXOFFICE" />
+    </definition>
+    
+    <!-- planed -->    
+    <definition name="planed/*" extends="basede_definition">
+      <put-attribute name="body" value="/planed/{1}.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>개봉예정리스트" />
+      <put-attribute name="menu" value="PLANED" />
+    </definition>
+    
+    <!-- screening -->    
+    <definition name="screening/*" extends="basede_definition">
+      <put-attribute name="body" value="/screening/{1}.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>최신개봉리스트" />
+      <put-attribute name="menu" value="SCREENING" />
+    </definition>
+    
+    <!-- FAQ -->    
+    <definition name="faq/*" extends="basede_definition">
+      <put-attribute name="body" value="/faq/{1}.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>자주하는질문" />
+      <put-attribute name="menu" value="FAQ" />
+    </definition>
+    
+    <!-- theater -->    
+    <definition name="theater/*" extends="basede_definition">
+      <put-attribute name="body" value="/theater/{1}.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>영화관" />
+      <put-attribute name="menu" value="THEATER" />
+    </definition>
+    
+    
+    <!-- login & join -->    
+    <definition name="login/*" extends="basede_definition">
+      <put-attribute name="body" value="/login/{1}.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>로그인" />
+      <put-attribute name="menu" value="LOGIN" />
+    </definition>
+    
+    <!-- usermypage -->    
+    <definition name="usermypage/*" extends="basede_definition">
+      <put-attribute name="body" value="/usermypage/{1}.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>마이페이지" />
+      <put-attribute name="menu" value="MYPAGE" />
+    </definition>
+    
+   <!-- store -->    
+    <definition name="store/*" extends="basede_definition">
+      <put-attribute name="body" value="/store/{1}.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>스토어" />
+      <put-attribute name="menu" value="STORE" />
+    </definition>
+    
+   <!-- cart -->    
+ 	<definition  name="cart/*" extends="basede_definition">
+      <put-attribute name="body" value="/cart/{1}.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>장바구니" />
+      <put-attribute name="menu" value="CART" />
+    </definition>
+    
+    <!-- table_movie -->    
+ 	<definition  name="table/screen_table" extends="basede_definition">
+      <put-attribute name="body" value="/table/screen_table.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>영화편성" />
+      <put-attribute name="menu" value="TABLE_MOVIE" />
+    </definition>
+    
+    <!-- table_theater -->    
+ 	<definition  name="table/theater_table" extends="basede_definition">
+      <put-attribute name="body" value="/table/theater_table.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>극장편성" />
+      <put-attribute name="menu" value="TABLE_THEATER" />
+    </definition>
+    
+     <!-- userpage -->    
+    <definition name="userpage/*" extends="basede_definition">
+      <put-attribute name="body" value="/userpage/{1}.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>유저관리페이지" />
+      <put-attribute name="menu" value="userpage" />
+    </definition>
+    
+     <!-- phototicket -->    
+    <definition name="phototicket/*" extends="basede_definition">
+      <put-attribute name="body" value="/phototicket/{1}.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>포토티켓" />
+      <put-attribute name="menu" value="phototicket" />
+    </definition>
+    
+    <!-- notice -->    
+    <definition name="notice/*" extends="basede_definition">
+      <put-attribute name="body" value="/notice/{1}.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>공지사항" />
+      <put-attribute name="menu" value="notice" />
+    </definition>
+    
+        <!-- notice -->    
+    <definition name="qna/*" extends="basede_definition">
+      <put-attribute name="body" value="/qna/{1}.jsp" />
+      <put-attribute name="title" value="SUNNYSIDE>1:1문의" />
+      <put-attribute name="menu" value="qna" />
+    </definition>
+
+</tiles-definitions>

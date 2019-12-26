@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sunnyside.movie">
+	
+	<sql id="movieColumns">						
+		movie_id as movieId
+	    ,kortitle
+	    ,engtitle
+	    ,limitage
+	    ,genre
+	    ,DATE_FORMAT(rel_date,'%Y.%m.%d') as relDate
+	    ,director
+	    ,cast
+	    ,running_time as runningTime
+	    ,synopsis
+	    ,poster
+	    ,expert_rate as expertRate
+	    ,visitor_rate as visitorRate
+	    ,screen_state as screenState
+	</sql>
+	
+	<sql id="movieBaseCondition">
+		<choose>
+			<when test="'10' == searchDiv">
+				and KORTITLE LIKE CONCAT('%',#{searchWord},'%')			
+			</when>
+			<when test="'20' == searchDiv">
+				and DIRECTOR LIKE CONCAT('%',#{searchWord},'%')				
+			</when>
+			<when test="'30' == searchDiv">
+				and SCREEN_STATE LIKE CONCAT('%',#{searchWord_second, jdbcType=VARCHAR},'%')	
+				and KORTITLE LIKE CONCAT('%',#{searchWord, jdbcType=VARCHAR},'%')			
+			</when>
+		</choose>
+	</sql>
+	
+	<!-- 방문자 평점 수정 -->
+	<update id="do_visitorRate_update" parameterType="Movie">	
+		UPDATE 
+			MOVIE
+		SET 
+			visitor_rate = (SELECT 
+								ROUND(AVG(visitor_rate),1)
+						    FROM
+						    	REVIEW
+						    WHERE
+						    	movie_Id=#{movieId, jdbcType=VARCHAR})
+		WHERE 
+			movie_Id=#{movieId, jdbcType=VARCHAR}
+	</update>	
+	
+	<!-- 목록조회 -->
+	<select id="do_retrieve" parameterType="Search" resultType="Movie">
+	  SELECT T1.*,T2.*                                       
+     FROM                                                              
+     (                                                                 
+        SELECT                                                         
+			B.movie_id as movieId                       
+			,B.kortitle                                 
+			,B.engtitle                                 
+			,B.limitage                                 
+			,B.genre                                    
+			,DATE_FORMAT(B.rel_date,'%Y.%m.%d') as relDate
+			,B.director                                 
+			,B.cast                                     
+			,B.running_time as runningTime              
+			,B.synopsis                                 
+			,B.poster                                   
+			,B.expert_rate as expertRate                
+			,B.visitor_rate as visitorRate              
+			,B.screen_state as screenState 
+		FROM               
+		                                            
+        (   
+        	SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS rnum, A.*                                 
+           FROM                                                       
+           (                                                           
+              SELECT  *                                              
+              FROM   MOVIE                        
+              WHERE rel_date > '2019/07/12'
+              AND (<![CDATA[@rownum]]>:=0)=0 
+              <include refid="movieBaseCondition"/>                                        
+              ORDER BY rel_date DESC                                   
+           )A                                                                                  
+        ) B                                                            
+        WHERE B.rnum <![CDATA[ <= ]]> (#{pageSize} * (#{pageNum}-1)+#{pageSize}) 
+        AND B.rnum <![CDATA[ >= ]]> (#{pageSize} * (#{pageNum}-1)+1)                                 
+     )T1
+     NATURAL JOIN                                                      
+     (                                                                 
+         SELECT COUNT(*) totalCnt                                     
+         FROM MOVIE       
+         WHERE rel_date > '2019/07/12'                                      
+         <include refid="movieBaseCondition"/>                                             
+     )T2  
+	</select>	
+	
+	<!-- 영화 존재 확인 -->
+	<select id="do_exist" parameterType="Movie" resultType="int">
+		SELECT 
+			count(*)
+		FROM 
+			MOVIE
+		WHERE 
+			kortitle LIKE CONCAT('%',#{kortitle},'%')	
+	</select>
+	
+	<!-- 단건조회 -->
+	<select id="do_selectOne" parameterType="Movie" resultType="Movie">
+		SELECT
+		    <include refid="movieColumns"></include> 
+		FROM
+		    MOVIE
+		WHERE
+		    movie_id = #{movieId, jdbcType=VARCHAR}
+	</select>
+	
+	<!-- 영화 등록(kmdb) -->
+	<insert id="do_save" parameterType="Movie">
+		INSERT INTO MOVIE (
+		    movie_id
+			,kortitle
+			,engtitle
+			,limitage
+			,genre
+			,rel_date
+			,director
+			,cast
+			,running_time
+			,synopsis
+			,poster
+			,expert_rate
+			,visitor_rate
+		    ,screen_state
+		) VALUES (
+		    #{movieId, jdbcType=VARCHAR}
+		    ,#{kortitle, jdbcType=VARCHAR}
+		    ,#{engtitle, jdbcType=VARCHAR}
+		    ,#{limitage, jdbcType=VARCHAR}
+		    ,#{genre, jdbcType=VARCHAR}
+		    ,#{relDate, jdbcType=VARCHAR}
+		    ,#{director, jdbcType=VARCHAR}
+		    ,#{cast, jdbcType=VARCHAR}
+		    ,#{runningTime, jdbcType=NUMERIC}
+		    ,#{synopsis, jdbcType=VARCHAR}
+		    ,#{poster, jdbcType=VARCHAR}
+		    ,0
+		    ,0
+			,0
+		)
+	</insert>
+</mapper>

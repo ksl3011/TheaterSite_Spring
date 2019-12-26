@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="reservation">
+
+	<!-- 검색어 -->
+	<sql id="baseCondition">
+	<where>
+		<choose>
+			<when test="'10' == searchDiv">
+				TICKET_CODE LIKE CONCAT('%' , #{searchWord} , '%')
+				 AND (<![CDATA[@rownum]]>:=0)=0
+				
+			</when>
+			<otherwise>(<![CDATA[@rownum]]>:=0)=0</otherwise>
+		</choose>
+	</where>
+	</sql>
+
+	<delete id="do_delete" parameterType="TicketVO">
+		DELETE FROM TICKET_HISTORY WHERE TICKET_CODE = #{ticketCode, jdbcType=VARCHAR}
+	</delete>
+	
+	<select id="do_selectOne" parameterType="TicketVO" resultType="TicketVO">
+		SELECT
+			TICKET_CODE as ticketCode
+			,BRANCH_ID as branchId
+			,ROOM_ID as roomId
+			,SCREEN_ID as screenId
+			,USER_ID as userId
+			,MOVIE_ID as movieId
+			,SEAT_NM as seatNm
+			,ADULT_CNT as adultCnt
+			,PAY_STATE as payState
+			,COST as cost
+			,DATE_FORMAT(PAY_DT, '%Y-%m-%d %H:%i:%s') as payDt
+			,DATE_FORMAT(TICKET_DT, '%Y-%m-%d %H:%i:%s') as ticketDt
+		FROM
+		    TICKET_HISTORY
+		WHERE
+		    SCREEN_ID = #{screenId, jdbcType=VARCHAR}
+		AND
+			SEAT_NM = #{seatNm, jdbcType=VARCHAR}
+	</select>
+	 
+	<select id="do_save" parameterType="TicketVO">
+		INSERT INTO TICKET_HISTORY (
+			TICKET_CODE
+			,BRANCH_ID
+			,ROOM_ID
+			,SCREEN_ID
+			,USER_ID
+			,MOVIE_ID
+			,SEAT_NM
+			,ADULT_CNT
+			,PAY_STATE
+			,COST
+			,TICKET_DT
+			,PAY_DT
+		) VALUES (
+		    SUBSTR(CONCAT(MD5(RAND()),MD5(RAND())),1,15)
+		    ,#{branchId, jdbcType=VARCHAR}
+		    ,#{roomId, jdbcType=VARCHAR}
+		    ,#{screenId, jdbcType=VARCHAR}
+		    ,#{userId, jdbcType=VARCHAR}
+		    ,#{movieId, jdbcType=VARCHAR}
+		    ,#{seatNm, jdbcType=VARCHAR}
+		    ,#{adultCnt, jdbcType=NUMERIC}
+		    ,#{payState, jdbcType=NUMERIC}
+		    ,#{cost, jdbcType=NUMERIC}
+		    ,NOW()
+		    ,NOW()
+		)
+	</select>
+	
+	<update id="do_update" parameterType="TicketVO">
+		UPDATE TICKET_HISTORY
+		SET
+		    BRANCH_ID = #{branchId, jdbcType=VARCHAR}
+		   ,ROOM_ID = #{roomId, jdbcType=VARCHAR}
+		   ,SCREEN_ID = #{screenId, jdbcType=VARCHAR}
+		   ,USER_ID = #{userId, jdbcType=VARCHAR}
+		   ,MOVIE_ID = #{movieId, jdbcType=VARCHAR}
+		   ,SEAT_NM = #{seatNm, jdbcType=VARCHAR}
+		   ,ADULT_CNT = #{adultCnt, jdbcType=NUMERIC}
+		   ,PAY_STATE = #{payState, jdbcType=NUMERIC}
+		   ,COST = #{cost, jdbcType=NUMERIC}
+		   ,PAY_DT = DATE_FORMAT(#{payDt, jdbcType=VARCHAR}, '%Y-%m-%d %H:%i:%s')
+		   ,TICKET_DT = DATE_FORMAT(#{ticketDt, jdbcType=VARCHAR}, '%Y-%m-%d %H:%i:%s')
+		WHERE
+			TICKET_CODE = #{ticketCode, jdbcType=VARCHAR}
+	</update>
+	
+	<select id="do_retrieve" parameterType="Search" resultType="TicketVO">
+		SELECT T.RNUM as num
+			  ,T.TICKET_CODE as ticketCode
+			  ,T.BRANCH_ID as branchId
+			  ,T.ROOM_ID as roomId
+			  ,T.SCREEN_ID as screenId
+			  ,T.USER_ID as userId
+			  ,T.MOVIE_ID as movieId
+			  ,T.SEAT_NM as seatNm
+			  ,T.ADULT_CNT as adultCnt
+			  ,T.PAY_STATE as payState
+			  ,T.COST as cost
+			  ,DATE_FORMAT(T.PAY_DT, '%Y-%m-%d %H:%i:%s') as payDt
+			  ,DATE_FORMAT(T.TICKET_DT, '%Y-%m-%d %H:%i:%s') as ticketDt
+		FROM( 
+		    SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS RNUM, A.*
+		    FROM(
+		         SELECT *
+		         FROM TICKET_HISTORY
+		         <include refid="baseCondition"/>
+		         ORDER BY TICKET_DT
+		        )A
+		    )T
+		    WHERE CEIL(T.RNUM/ #{pageSize, jdbcType=VARCHAR} ) = #{pageNum, jdbcType=VARCHAR}
+	</select>
+
+	<select id="do_selectOne_result" parameterType="TicketVO" resultType="TicketVO">
+		SELECT
+			TICKET_CODE as ticketCode
+			,BRANCH_ID as branchId
+			,ROOM_ID as roomId
+			,SCREEN_ID as screenId
+			,USER_ID as userId
+			,MOVIE_ID as movieId
+			,SEAT_NM as seatNm
+			,ADULT_CNT as adultCnt
+			,PAY_STATE as payState
+			,COST as cost
+			,DATE_FORMAT(PAY_DT, '%Y-%m-%d %H:%i:%s') as payDt
+			,DATE_FORMAT(TICKET_DT, '%Y-%m-%d %H:%i:%s') as ticketDt
+		FROM
+		    TICKET_HISTORY
+		WHERE
+		    USER_ID = #{userId, jdbcType=VARCHAR}
+        AND
+            SCREEN_ID = #{screenId, jdbcType=VARCHAR}
+        AND
+            SEAT_NM = #{seatNm, jdbcType=VARCHAR}
+	</select>
+	
+	<select id="do_retrieve_seatRealTime" parameterType="Search" resultType="Seat">
+		SELECT BRANCH_ID as branchId,
+			    ROOM_ID as roomId,
+				SEAT_NM as seatNm,
+				SEAT_Y as seatY,
+				SEAT_X as seatX,
+				USE_YN as useYN,
+				SCREEN_ID as screenId
+		FROM SEAT_RESERVATION
+		WHERE ROOM_ID = #{searchWord, jdbcType=VARCHAR}
+		AND SCREEN_ID = (
+		                SELECT SCREEN_ID
+		                FROM SCREEN_INFO
+		                WHERE ROOM_ID = #{searchWord, jdbcType=VARCHAR}
+		                AND DATE_FORMAT(NOW(), '%Y-%m-%d') = DATE_FORMAT(SCREEN_DT, '%Y-%m-%d')
+		                AND NOW() <![CDATA[>=]]> START_TIME
+		                AND NOW() <![CDATA[<]]> END_TIME
+		                )
+	</select>
+</mapper>

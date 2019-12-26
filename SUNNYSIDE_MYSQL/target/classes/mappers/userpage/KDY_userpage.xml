@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="userpage">
+
+	<!-- 검색어 -->
+	<sql id="baseCondition">
+	<where>
+		<choose>
+			<when test="'10' == searchDiv">
+				TICKET_CODE LIKE CONCAT('%' , #{searchWord} , '%')
+			</when>
+			<otherwise></otherwise>
+		</choose>
+	</where>
+	</sql>
+
+	<delete id="do_delete" parameterType="KDY_MoviehistoryVO">
+		DELETE FROM TICKET_HISTORY WHERE ticket_code = #{ticket_code, jdbcType=VARCHAR}
+	</delete>
+	
+	<select id="do_retrieve" parameterType="listSearchVO" resultType="KDY_MoviehistoryVO">
+		SELECT T.RNUM as num
+			  ,T.ticket_code as ticket_code
+			  ,T.kortitle as kortitle
+			  ,DATE_FORMAT(T.ticket_dt,'%Y-%m-%d') as ticket_dt
+			  ,T.room_nm as room_nm
+		FROM(
+		    SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS RNUM, A.*
+		    FROM(
+		         SELECT
+			     c.ticket_code,
+			     d.kortitle,
+			     c.ticket_dt,
+				 e.room_nm
+			    		 FROM  TICKET_HISTORY c JOIN MOVIE d
+                         on c.movie_id =d.movie_id
+                         join ROOM e
+                         on e.room_id = c.room_id
+				 where c.user_id=#{user_id,jdbcType=VARCHAR}
+				 
+		         
+		        )A
+		    )T
+		     WHERE CEIL(T.RNUM/ #{pageSize, jdbcType=VARCHAR} ) = #{pageNum, jdbcType=VARCHAR}
+	</select>
+	
+	<select id="do_coupon_retrieve" parameterType="listSearchVO" resultType="KDY_CouponVO">
+		SELECT T.RNUM as num
+			  ,T.coupon_nm as coupon_nm
+			  ,T.coupon_code as coupon_code
+			  ,DATE_FORMAT(T.use_dt,'%Y-%m-%d') as use_dt
+			  ,T.usable as usable
+		FROM(
+		    SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS RNUM, A.*
+		    FROM(
+		         SELECT
+				    coupon_nm,
+				    coupon_code,
+				    usable,
+				    use_dt
+				FROM
+				    USER_COUPON
+				    
+				WHERE
+					user_id=#{user_id,jdbcType=VARCHAR}
+			         and (<![CDATA[@rownum]]>:=0)=0
+			        )A
+		    )T
+		    WHERE CEIL(RNUM/ #{pageSize, jdbcType=VARCHAR} ) = #{pageNum, jdbcType=VARCHAR}
+	</select>
+	<select id="do_membership" parameterType="listSearchVO" resultType="KDY_UserinfoVO">
+		SELECT 
+			total_pay,
+			user_name,	
+			user_level,
+			user_id
+		FROM
+			 USER_INFO
+		WHERE
+			user_id=#{user_id,jdbcType=VARCHAR}
+	</select>
+	
+	
+	<select id="do_qnaList" parameterType="listSearchVO" resultType="KDY_QnalistVO"> 
+		SELECT T.RNUM as num
+			  ,T.title as title
+			  ,T.status as status
+			  ,DATE_FORMAT(T.reg_dt,'%Y-%m-%d') as reg_dt
+		FROM(
+		    SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS RNUM, A.*
+		    FROM(
+		       SELECT
+			        title,
+					status,
+					reg_dt
+				FROM
+					 QNA 
+				WHERE
+					user_id=#{user_id,jdbcType=VARCHAR}
+				AND (<![CDATA[@rownum]]>:=0)=0
+			        )A
+		    )T
+		    WHERE CEIL(T.RNUM/ #{pageSize, jdbcType=VARCHAR} ) = #{pageNum, jdbcType=VARCHAR}
+	</select>
+	
+	<select id="do_reservationList" parameterType="listSearchVO" resultType="KDY_ReservationVO"> 
+		SELECT T.RNUM as num
+			  ,T.pay_code as pay_code
+			  ,T.product_nm as product_nm
+			  ,FORMAT(T.total_cost,'0')as total_cost
+			  ,DATE_FORMAT(T.pay_dt,'%Y-%m-%d') as pay_dt
+		FROM(
+		    SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS RNUM, A.*
+		    FROM(
+		        SELECT
+					b.pay_code,
+					a.product_nm,
+					b.total_cost,
+					b.pay_dt
+				FROM
+					PRODUCT a JOIN PAY_HISTORY b
+					ON 
+						a.product_id =b.product_id
+				WHERE
+					user_id=#{user_id,jdbcType=VARCHAR}
+				AND (<![CDATA[@rownum]]>:=0)=0			         
+			        )A
+		    )T
+		    WHERE CEIL(T.RNUM/ #{pageSize, jdbcType=VARCHAR} ) = #{pageNum, jdbcType=VARCHAR}
+	</select>
+	<delete id="do_delete_item" parameterType="KDY_ReservationVO">
+		DELETE FROM PAY_HISTORY WHERE pay_code = #{pay_code, jdbcType=VARCHAR}
+	</delete>
+	
+
+</mapper>

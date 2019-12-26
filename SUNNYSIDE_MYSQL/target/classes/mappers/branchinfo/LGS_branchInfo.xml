@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="branchinfo">
+
+	<!-- 검색어 -->
+	<sql id="baseCondition">
+	<where>
+		<choose>
+			<when test="'10' == searchDiv">
+				BRANCH_ID LIKE CONCAT('%',#{searchWord},'%')
+			</when>
+			<when test="'20' == searchDiv">
+				BRANCH_NM LIKE CONCAT('%',#{searchWord},'%')
+			</when>
+			<otherwise></otherwise>
+		</choose>
+	</where>
+	</sql>
+
+	<delete id="do_delete" parameterType="BranchInfo">
+		DELETE FROM BRANCH_INFO WHERE BRANCH_ID = #{branchId, jdbcType=VARCHAR}
+	</delete>
+	
+	<select id="do_selectOne" parameterType="BranchInfo" resultType="BranchInfo">
+		SELECT
+			BRANCH_ID as branchId,
+		    BRANCH_NM as branchNm
+		FROM
+		    BRANCH_INFO
+		WHERE
+		    BRANCH_NM = #{branchNm, jdbcType=VARCHAR}
+	</select>
+	 
+	<select id="do_save" parameterType="BranchInfo">
+		INSERT INTO BRANCH_INFO (
+		    BRANCH_NM,
+		    BRANCH_ID
+		) VALUES (
+		    #{branchNm, jdbcType=VARCHAR},
+		    SUBSTR(CONCAT(MD5(RAND()),MD5(RAND())),1,15)
+		)
+	</select>
+	
+	<update id="do_update" parameterType="BranchInfo">
+		UPDATE BRANCH_INFO
+		SET
+			BRANCH_NM = #{branchNm, jdbcType=VARCHAR}
+		WHERE
+			BRANCH_ID = #{branchId, jdbcType=VARCHAR}
+	</update>
+	
+	<select id="do_retrieve" parameterType="Search" resultType="BranchInfo">
+		SELECT T.RNUM as NUM
+			  ,T.BRANCH_ID as branchId
+			  ,T.BRANCH_NM as branchNm
+		FROM(
+		    SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS RNUM, A.*
+		    FROM(
+		         SELECT *
+		         FROM BRANCH_INFO
+		         <include refid="baseCondition"/>
+		        )A
+		    WHERE (<![CDATA[@rownum]]>:=0)=0 
+		    )T
+		    WHERE CEIL(T.RNUM/ #{pageSize, jdbcType=VARCHAR} ) = #{pageNum, jdbcType=VARCHAR}
+		ORDER BY 2
+	</select>
+
+</mapper>

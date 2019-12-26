@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="room">
+
+	<!-- 검색어 -->
+	<sql id="baseCondition">
+	<where>
+		<choose>
+			<when test="'10' == searchDiv">
+				BRANCH_ID LIKE CONCAT('%' , #{searchWord} , '%')
+				and (<![CDATA[@rownum]]>:=0)=0
+			</when>
+			<when test="'20' == searchDiv">
+				ROOM_ID LIKE CONCAT('%' , #{searchWord} , '%')
+				and (<![CDATA[@rownum]]>:=0)=0
+			</when>
+			<otherwise>(<![CDATA[@rownum]]>:=0)=0</otherwise>
+		</choose>
+	</where>
+	</sql>
+	 
+	<delete id="do_delete" parameterType="Room">
+		DELETE FROM ROOM WHERE ROOM_ID = #{roomId, jdbcType=VARCHAR}
+	</delete>
+	
+	<select id="do_selectOne" parameterType="Room" resultType="Room">
+		SELECT
+			BRANCH_ID as branchId,
+		    ROOM_ID as roomId,
+			ROOM_NM as roomNm,
+			TOTAL_SEAT as totalSeat,
+			REST_SEAT as restSeat
+		FROM
+		    ROOM
+		WHERE
+		    ROOM_NM = #{roomNm, jdbcType=VARCHAR}
+	</select>
+	 
+	<select id="do_save" parameterType="Room">
+		INSERT INTO ROOM (
+		    BRANCH_ID,
+		    ROOM_ID,
+		    ROOM_NM,
+		    TOTAL_SEAT,
+		    REST_SEAT
+		) VALUES (
+		    #{branchId, jdbcType=VARCHAR},
+		    SUBSTR(CONCAT(MD5(RAND()),MD5(RAND())),1,15),
+		    #{roomNm, jdbcType=VARCHAR},
+		    #{totalSeat, jdbcType=NUMERIC},
+		    #{restSeat, jdbcType=NUMERIC}
+		)
+	</select>
+	
+	<update id="do_update" parameterType="Room">
+		UPDATE ROOM
+		SET
+			TOTAL_SEAT = #{totalSeat, jdbcType=NUMERIC},
+			REST_SEAT = #{restSeat, jdbcType=NUMERIC}
+		WHERE
+			ROOM_ID = #{roomId, jdbcType=VARCHAR}
+	</update>
+	
+	<update id="do_updateName" parameterType="Room">
+		UPDATE ROOM
+		SET
+			ROOM_NM = #{roomNm, jdbcType=VARCHAR}
+		WHERE
+			ROOM_ID = #{roomId, jdbcType=VARCHAR}
+	</update>
+	
+	<select id="do_retrieve" parameterType="Search" resultType="Room">
+		SELECT T.RNUM as NUM
+			  ,T.BRANCH_ID as branchId
+			  ,T.ROOM_ID as roomId
+			  ,T.ROOM_NM as roomNm
+			  ,T.TOTAL_SEAT as totalSeat
+			  ,T.REST_SEAT as restSeat
+		FROM(
+		    SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS RNUM, A.*
+		    FROM(
+		         SELECT *
+		         FROM ROOM
+		         <include refid="baseCondition"/>
+		        )A
+		    )T
+		    WHERE CEIL(T.RNUM/ #{pageSize, jdbcType=VARCHAR} ) = #{pageNum, jdbcType=VARCHAR}
+		
+	</select>
+
+</mapper>

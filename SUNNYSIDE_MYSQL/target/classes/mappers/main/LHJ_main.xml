@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sunnyside.main"> 
+	<!-- 공지 조회 -->
+	<select id="do_notice_retrieve" resultType="KYMNoticeVO">
+		SELECT 
+		    a.notice_id as noticeId,
+		    a.title,
+		    a.org_file_nm as orgFileNm,
+		    a.save_file_nm as saveFileNm,
+		    a.ext,
+		    a.contents,
+		    a.writer_id as writerId,
+		    DATE_FORMAT(a.mod_dt, '%Y.%m.%d') as modDt,
+		    DATE_FORMAT(a.reg_dt, '%Y.%m.%d') as regDt,
+		    a.branch_nm as branchSNm
+		FROM 
+		    (
+		    SELECT 
+		        notice_id,
+		        title,
+		        org_file_nm,
+		        save_file_nm,
+		        ext,
+		        contents,
+		        writer_id,
+		        mod_dt,
+		        reg_dt,
+		        branch_nm
+		    FROM 
+		        NOTICE
+		    ORDER BY 
+		        reg_dt DESC
+		    ) a
+		    LIMIT 0,4	
+	</select>
+	
+	<!-- 베너이미지 삭제 -->
+	<delete id="do_image_delete" parameterType="MainImage">
+		DELETE 
+		FROM 
+			MAIN_IMAGE
+		WHERE
+		    image_id = #{imageId,jdbcType=VARCHAR}
+	</delete>
+	
+	<!-- 베너이미지 등록 -->
+	<insert id="do_image_save" parameterType="MainImage">
+		INSERT INTO MAIN_IMAGE (
+		    image_id,
+		    org_img_nm,
+		    save_img_nm,
+		    ext,
+		    img_size,
+		    reg_dt
+		) VALUES (
+		    CONCAT(DATE_FORMAT(NOW(),'%Y%m%d'),'-',SUBSTR(CONCAT(MD5(RAND()),MD5(RAND())),1,15)),
+		    #{orgImgNm,jdbcType=VARCHAR},
+		    #{saveImgNm,jdbcType=VARCHAR},
+		    #{ext,jdbcType=VARCHAR},
+		    #{imgSize,javaType=long},
+		    NOW()
+		)
+	</insert>
+	 
+	<!-- 목록조회 -->
+	<select id="do_banner_retrieve" resultType="MainImage">
+		SELECT
+		    image_id as imageId,
+		    org_img_nm as orgImgNm,
+		    save_img_nm saveImgNm,
+		    ext,
+		    img_size as imgSize
+		FROM
+		    MAIN_IMAGE
+		ORDER BY 
+			image_id
+	</select>
+</mapper>

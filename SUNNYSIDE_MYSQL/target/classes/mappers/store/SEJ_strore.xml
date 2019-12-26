@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sunnyside.store">
+	<!-- 
+		 do_save   : 상품 등록 
+		 do_delete : 상품 삭제
+	     do_update : 상품정보수정
+	     get_selectOne : 상품 단건조회
+	     get_retrieve  : 상품목록조회
+	   -->
+	   
+<!-- 상품등록 -->
+	<insert id="do_save" parameterType="Store">
+				INSERT INTO PRODUCT (
+					cart_id,
+				    product_id,
+				    product_nm,
+				    product_info,
+				    category,
+				    product_cost,
+				    org_file_nm,
+				    save_file_nm,
+				    ext
+				) VALUES (
+					CONCAT(DATE_FORMAT(NOW(),'%Y%m%d'), '-', SUBSTR(CONCAT(MD5(RAND()),MD5(RAND())),1,5)),
+     				CONCAT(DATE_FORMAT(NOW(),'%Y%m%d'), '-', '00', #{category,jdbcType=NUMERIC}, '-', SUBSTR(CONCAT(MD5(RAND()),MD5(RAND())),1,3)),
+				    #{productNm,jdbcType=VARCHAR},
+				    #{productInfo,jdbcType=VARCHAR},
+				    #{category,jdbcType=NUMERIC},
+				    #{productCost,jdbcType=NUMERIC},
+				    #{orgFileNm,jdbcType=VARCHAR},
+				    #{saveFileNm,jdbcType=VARCHAR},
+				    #{ext,jdbcType=VARCHAR}
+				)		   
+	</insert>
+	
+
+<!-- 상품 삭제 -->
+	<delete id="do_delete" parameterType="Store">
+				DELETE FROM PRODUCT
+				WHERE
+				    product_id =  #{productId,jdbcType=VARCHAR}
+	</delete>
+
+<!-- 상품정보 수정 -->
+	<update id="do_update" parameterType="Store">
+				UPDATE PRODUCT
+				SET product_nm     = #{productNm,jdbcType=VARCHAR},
+				    product_info   = #{productInfo,jdbcType=VARCHAR},
+				    product_cost   = #{productCost,jdbcType=NUMERIC},
+				    org_file_nm    = #{orgFileNm,jdbcType=VARCHAR},
+    				save_file_nm   = #{saveFileNm,jdbcType=VARCHAR},
+   				    ext			   = #{ext,jdbcType=VARCHAR}
+				WHERE
+			   	 	product_id = #{productId,jdbcType=VARCHAR}
+	</update>
+
+<!-- 상품 단건조회 -->
+  <select id="do_selectOne" parameterType="Store" resultType="Store">
+   	 SELECT                                 
+		   <include refid="storeColumns"/>          
+		 FROM                                   
+		     PRODUCT                              
+		  WHERE product_id=#{productId,jdbcType=VARCHAR}      
+   </select>
+   
+   <sql id="storeColumns">
+   					CART_ID as cartId,
+   			  	 	PRODUCT_ID as productId,
+				    PRODUCT_NM as productNm,
+				    PRODUCT_INFO as productInfo,
+				    CATEGORY,
+				    PRODUCT_COST as productCost,
+					ORG_FILE_NM as orgFileNm,
+   				    SAVE_FILE_NM as saveFileNm,
+  				    EXT
+   </sql>
+
+<!-- 상품 조회 -->
+	 <select id="do_retrieve" parameterType="Search" resultType="Store">
+		  SELECT T1.*												
+		  FROM                                                              
+		  (                                                                 
+		  	SELECT  B.rnum as num,
+				  	B.PRODUCT_ID as productId ,
+					B.PRODUCT_NM as productNm,
+					B.PRODUCT_INFO as productInfo,
+					B.CATEGORY,
+					B.PRODUCT_COST as productCost,
+					B.ORG_FILE_NM as orgFileNm,
+   				    B.SAVE_FILE_NM as saveFileNm,
+  				    B.EXT                                                    
+		    FROM(
+ 					SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS rnum,A.*
+ 					FROM(
+  							SELECT *
+ 						    FROM PRODUCT   
+ 						    WHERE  1=1   
+ 					and CATEGORY LIKE CONCAT('%', #{searchWord}, '%')  
+ 					and (<![CDATA[@rownum]]>:=0)=0                                                                                
+		  		)A                                                         			       
+		  	) B               
+		  	WHERE B.rnum <![CDATA[ <= ]]> (#{pageSize} * (#{pageNum}-1)+#{pageSize})    		                                             
+		  	AND B.rnum <![CDATA[ >= ]]> (#{pageSize} * (#{pageNum}-1)+1)                  				   
+		  )T1	
+	</select>
+
+
+<!-- 팝콘상품 조회 -->
+	 <select id="do_retrieve_popcorn" parameterType="Search" resultType="Store">
+		  SELECT T1.*												
+		  FROM                                                              
+		  (                                                                 
+		  	SELECT  B.rnum as num,
+				  	B.PRODUCT_ID as productId ,
+					B.PRODUCT_NM as productNm,
+					B.PRODUCT_INFO as productInfo,
+					B.CATEGORY,
+					B.PRODUCT_COST as productCost,
+					B.ORG_FILE_NM as orgFileNm,
+   				    B.SAVE_FILE_NM as saveFileNm,
+  				    B.EXT                                                    
+		    FROM(
+ 					SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS rnum,A.*
+ 					FROM(
+  							SELECT *
+ 						    FROM PRODUCT   
+ 						    WHERE  1=1                        
+		  					and CATEGORY LIKE CONCAT('%' , '1' , '%')   
+		  					and (<![CDATA[@rownum]]>:=0)=0                                                                        
+		  		)A 	       
+		  	) B                                                      
+		  	WHERE B.rnum <![CDATA[ <= ]]> (#{pageSize} * (#{pageNum}-1)+#{pageSize})    			      
+		  	AND B.rnum <![CDATA[ >= ]]> (#{pageSize} * (#{pageNum}-1)+1)                  				   
+		  )T1	
+		</select>
+
+<!-- 음료상품 조회 -->
+	 <select id="do_retrieve_drink" parameterType="Search" resultType="Store">
+		  SELECT T1.*												
+		  FROM                                                              
+		  (                                                                 
+		  	SELECT  B.rnum as num,
+				  	B.PRODUCT_ID as productId ,
+					B.PRODUCT_NM as productNm,
+					B.PRODUCT_INFO as productInfo,
+					B.CATEGORY,
+					B.PRODUCT_COST as productCost,
+					B.ORG_FILE_NM as orgFileNm,
+   				    B.SAVE_FILE_NM as saveFileNm,
+  				    B.EXT                                                     
+		    FROM(	
+ 					SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS rnum, A.*
+ 					FROM(
+  							SELECT *
+ 						    FROM PRODUCT   
+ 						    WHERE  1=1                        
+		  					and CATEGORY LIKE CONCAT('%' , '2' , '%')   
+		  					and (<![CDATA[@rownum]]>:=0)=0                                                                       
+		  		)A                                                         				       
+		  	) B               
+		  	WHERE B.rnum <![CDATA[ <= ]]> (#{pageSize} * (#{pageNum}-1)+#{pageSize})                                             
+		  	AND B.rnum <![CDATA[ >= ]]> (#{pageSize} * (#{pageNum}-1)+1)                  				   
+		  )T1	
+		</select>
+		
+
+<!-- 영화예매권 상품 조회 -->
+	 <select id="do_retrieve_movieticket" parameterType="Search" resultType="Store">
+		  SELECT T1.*												
+		  FROM                                                              
+		  (                                                                 
+		  	SELECT  B.rnum as num,
+				  	B.PRODUCT_ID as productId ,
+					B.PRODUCT_NM as productNm,
+					B.PRODUCT_INFO as productInfo,
+					B.CATEGORY,
+					B.PRODUCT_COST as productCost,
+					B.ORG_FILE_NM as orgFileNm,
+   				    B.SAVE_FILE_NM as saveFileNm,
+  				    B.EXT                                                      
+		    FROM(
+ 					SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS rnum,A.*
+ 					FROM(
+  							SELECT *
+ 						    FROM PRODUCT   
+ 						    WHERE  1=1                        
+		  					and CATEGORY LIKE CONCAT('%' , '3' , '%')  
+		  					and (<![CDATA[@rownum]]>:=0)=0                                                                       
+		  		)A    				       
+		  	) B     
+		  	WHERE B.rnum <![CDATA[ <= ]]> (#{pageSize} * (#{pageNum}-1)+#{pageSize})                                                          
+		  	AND B.rnum <![CDATA[ >= ]]> (#{pageSize} * (#{pageNum}-1)+1)                  				   
+		  )T1	
+		</select>
+		
+<!-- 메인페이지  -->
+	<!-- 팝콘상품 4개 조회 -->
+	 <select id="do_main_popcorn" parameterType="Search" resultType="Store">
+		  SELECT T1.*												
+		  FROM                                                              
+		  (                                                                 
+		  	SELECT  B.rnum as num,
+				  	B.PRODUCT_ID as productId ,
+					B.PRODUCT_NM as productNm,
+					B.PRODUCT_INFO as productInfo,
+					B.CATEGORY,
+					B.PRODUCT_COST as productCost,
+					B.ORG_FILE_NM as orgFileNm,
+   				    B.SAVE_FILE_NM as saveFileNm,
+  				    B.EXT                                                    
+		    FROM(
+ 					SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS rnum,A.*
+ 					FROM(
+  							SELECT *
+ 						    FROM PRODUCT   
+ 						    WHERE  1=1                        
+		  					and CATEGORY LIKE CONCAT('%' , '1' , '%')     
+		  					and (<![CDATA[@rownum]]>:=0)=0                                                              
+		  		)A                                                         				       
+		  	) B  
+		  	WHERE B.rnum  <![CDATA[ <= ]]> 4                                                            
+		  	AND B.rnum <![CDATA[ >= ]]> 0                				   
+		  )T1	
+		</select>
+	<!-- 음료상품 4개 조회 -->
+	 <select id="do_main_drink" parameterType="Search" resultType="Store">
+		  SELECT T1.*												
+		  FROM                                                              
+		  (                                                                 
+		  	SELECT  B.rnum as num,
+				  	B.PRODUCT_ID as productId ,
+					B.PRODUCT_NM as productNm,
+					B.PRODUCT_INFO as productInfo,
+					B.CATEGORY,
+					B.PRODUCT_COST as productCost,
+					B.ORG_FILE_NM as orgFileNm,
+   				    B.SAVE_FILE_NM as saveFileNm,
+  				    B.EXT                                                    
+		    FROM(
+ 					SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS rnum,A.*
+ 					FROM(
+  							SELECT *
+ 						    FROM PRODUCT   
+ 						    WHERE  1=1                        
+		  					and CATEGORY LIKE CONCAT('%' , '2' , '%')       
+		  					and (<![CDATA[@rownum]]>:=0)=0                                                                     
+		  		)A                                                         			       
+		  	) B 
+		  	WHERE B.rnum <![CDATA[ <= ]]> 4                                                             
+		  	AND B.rnum <![CDATA[ >= ]]> 0                				   
+		  )T1	
+		</select>
+	<!-- 영화예매권상품 4개 조회 -->
+	 <select id="do_main_ticket" parameterType="Search" resultType="Store">
+		  SELECT T1.*												
+		  FROM                                                              
+		  (                                                                 
+		  	SELECT  B.rnum as num,
+				  	B.PRODUCT_ID as productId ,
+					B.PRODUCT_NM as productNm,
+					B.PRODUCT_INFO as productInfo,
+					B.CATEGORY,
+					B.PRODUCT_COST as productCost,
+					B.ORG_FILE_NM as orgFileNm,
+   				    B.SAVE_FILE_NM as saveFileNm,
+  				    B.EXT                                                    
+		    FROM(
+ 					SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS rnum,A.*
+ 					FROM(
+  							SELECT *
+ 						    FROM PRODUCT   
+ 						    WHERE  1=1                        
+		  					and CATEGORY LIKE CONCAT('%' , '3' , '%')   
+		  					and (<![CDATA[@rownum]]>:=0)=0                                                                                    
+		  		)A                 
+		  	) B           
+		  	WHERE B.rnum <![CDATA[ <= ]]> 4  						                                                 
+		  	AND B.rnum <![CDATA[ >= ]]> 0                				   
+		  )T1	
+		</select>
+
+
+
+	
+</mapper>

@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sunnyside.notice">
+
+	<sql id="baseCondition">
+			<choose>
+				<when test="'10' == searchDiv">
+					and TITLE LIKE CONCAT('%' , #{searchWord} , '%')
+				</when>
+				<when test="'20' == searchDiv">
+					and CONTENTS LIKE CONCAT('%' , #{searchWord} , '%')
+				</when>
+				<when test="'30' == searchDiv">
+					and REG_ID LIKE CONCAT('%' , #{searchWord} , '%')
+				</when>
+				<otherwise></otherwise>							
+			</choose>
+	</sql>
+	
+	<!-- 목록조회 -->
+	<select id="do_retrieve" parameterType="SearchVO" resultType="KYMNoticeVO">
+	  SELECT T1.*,T2.*													
+	  FROM                                                              
+	  (                                                                 
+	  	SELECT       
+	  		B.USER_ID as userId,
+	  		B.NOTICE_ID as noticeId,
+			B.TITLE,
+			B.ORG_FILE_NM as orgFileNm,
+			B.SAVE_FILE_NM as saveFileNm,
+			B.EXT,
+			B.CONTENTS,
+			B.WRITER_ID as writerId,
+			B.MOD_DT as modDt,
+ 			CASE DATE_FORMAT(B.reg_dt, '%Y.%m.%d') when DATE_FORMAT(NOW(), '%Y.%m.%d') THEN DATE_FORMAT(now(), '%H:%i:%s')
+            ELSE DATE_FORMAT(B.reg_dt, '%Y.%m.%d') END AS regDt,
+			B.rnum as num,
+			B.BRANCH_NM as branchSNm,
+			IFNULL(B.FILE_ID,'0')  as fileId
+	  	FROM                  
+	  	( 	
+	  		SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS rnum, A.*
+	  		FROM                                                       
+	  		(                                                           
+	  			SELECT  *                                              
+	  			FROM   NOTICE    
+	  			WHERE  1=1
+	  			AND reg_dt <![CDATA[ >  ]]> DATE_FORMAT('19700101','%Y%m%d')
+	  			AND (<![CDATA[@rownum]]>:=0)=0
+				<include refid="baseCondition"/>                                  
+	  			ORDER BY reg_dt DESC
+	  		)A
+	  	) B  
+	  	WHERE B.rnum <![CDATA[ <= ]]> (#{pageSize} * (#{pageNum}-1)+#{pageSize})                                                          
+	  	AND B.rnum <![CDATA[ >= ]]> (#{pageSize} * (#{pageNum}-1)+1)
+	  )T1
+	  NATURAL JOIN
+	  (                                                                 
+	      SELECT COUNT(*) totalCnt                                     
+	      FROM NOTICE       
+	      WHERE  1=1                                                
+	  	  <include refid="baseCondition"/>        		                               
+	  )T2  
+	</select>
+
+	<update id="do_updateReadCnt" parameterType="KYMNoticeVO">
+		UPDATE NOTICE
+		SET  READ_CNT = (SELECT IFNULL(MAX(READ_CNT),0)+1 FROM notice WHERE NOTICE_ID = #{noticeId,jdbcType=VARCHAR})
+		WHERE USER_ID = #{userId,jdbcType=VARCHAR}
+	</update>
+
+	<select id="do_boardIdList" parameterType="SearchVO" resultType="KYMNoticeVO">
+		SELECT
+			USER_ID as userId,
+			NOTICE_ID as noticeId,
+			TITLE,
+			ORG_FILE_NM as orgFileNm,
+			SAVE_FILE_NM as saveFileNm,
+			EXT,
+			CONTENTS,
+			WRITER_ID as writerId,
+			BRANCH_NM as branchSNm,
+			MOD_DT as modDt,
+			REG_DT as regDt,
+			FILE_ID as fileId
+		FROM NOTICE
+		WHERE USER_ID LIKE CONCAT('%' , #{searchWord} , '%')
+		ORDER BY NOTICE_ID ASC
+	</select>
+
+	<!-- 단건조회 -->
+	<select id="do_selectOne" parameterType="KYMNoticeVO" resultType="KYMNoticeVO">
+		SELECT
+			NOTICE_ID as noticeId,
+			TITLE,
+			ORG_FILE_NM as orgFileNm,
+			SAVE_FILE_NM as saveFileNm,
+			EXT,
+			CONTENTS,
+			WRITER_ID as writerId,
+			MOD_DT as modDt,
+			REG_DT as regDt,
+			BRANCH_NM as branchSNm,
+			FILE_ID as fileId
+		FROM NOTICE
+		WHERE NOTICE_ID = #{noticeId,jdbcType=VARCHAR}
+	</select>
+	
+	<!-- 수정 -->
+	<update id="do_update" parameterType="KYMNoticeVO">
+		UPDATE NOTICE
+		SET   
+			  USER_ID = #{userId,jdbcType=VARCHAR}
+			, title = #{title,jdbcType=VARCHAR}
+			, org_file_nm = #{orgFileNm,jdbcType=VARCHAR}
+			, save_file_nm = #{saveFileNm,jdbcType=VARCHAR}
+			, ext = #{ext,jdbcType=VARCHAR}
+			, contents = #{contents,jdbcType=VARCHAR}
+			, writer_id = #{writerId,jdbcType=VARCHAR}
+			, BRANCH_NM = #{branchSNm,jdbcType=VARCHAR}
+			, FILE_ID = #{fileId,jdbcType=VARCHAR}
+			, MOD_DT = NOW()
+			, REG_DT = NOW()
+		WHERE NOTICE_id = #{noticeId,jdbcType=VARCHAR}
+		AND USER_iD = #{userId,jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 등록 -->
+	<insert id="do_save" parameterType="KYMNoticeVO" >
+		INSERT INTO NOTICE (
+			USER_ID,
+			TITLE,
+			ORG_FILE_NM,
+			SAVE_FILE_NM,
+			EXT,
+			CONTENTS,
+			WRITER_ID,
+			BRANCH_NM,
+			FILE_ID,
+			MOD_DT,
+			REG_DT
+		) VALUES (
+			#{userId,jdbcType=VARCHAR},
+			#{title,jdbcType=VARCHAR},
+			#{orgFileNm,jdbcType=VARCHAR},
+			#{saveFileNm,jdbcType=VARCHAR},
+			#{ext,jdbcType=VARCHAR},
+			#{contents,jdbcType=VARCHAR},
+			#{writerId,jdbcType=VARCHAR},
+			#{branchSNm,jdbcType=VARCHAR},
+			#{fileId,jdbcType=VARCHAR},
+			NOW(),
+			NOW()
+		)
+	</insert>
+	
+	<delete id="do_delete" parameterType="KYMNoticeVO">
+		DELETE FROM NOTICE
+		WHERE notice_id = #{noticeId,jdbcType=VARCHAR}
+	</delete>
+	
+	<select id="do_retrieveTwo" parameterType="CodeVO" resultType="CodeVO">
+		SELECT b.code_id as codeId      
+		     , b.code_nm as codeNm        
+		     , b.num                      
+		FROM CODE_TYPE a JOIN CODE b      
+		ON a.code_type_id = b.code_type_id
+		WHERE a.code_type_id = #{codeTypeId,jdbcType=VARCHAR}       
+		AND b.use_yn = 1                  
+		ORDER BY b.num                    
+	</select>
+	
+	<select id="do_retrieveThree" resultType="KYMBranchVO">
+		SELECT DISTINCT BRANCH_NM as branchSNm
+		FROM BRANCH_INFO               
+	</select>
+	
+	<select id="do_retrieveFour" resultType="KYMBranchVO">
+		SELECT DISTINCT BRANCH_NM as branchSNm
+		FROM BRANCH_INFO
+	</select>
+	
+</mapper>

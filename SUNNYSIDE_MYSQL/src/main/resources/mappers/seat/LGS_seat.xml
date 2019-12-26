@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="seat">
+
+	<!-- 검색어 -->
+	<sql id="baseCondition">
+	<where>
+		<choose>
+			<when test="'10' == searchDiv">
+				 BRANCH_ID LIKE CONCAT('%' , #{searchWord, jdbcType=VARCHAR} , '%')
+				 AND (<![CDATA[@rownum]]>:=0)=0
+			</when>
+			<when test="'20' == searchDiv">
+				 ROOM_ID LIKE CONCAT('%' , #{searchWord, jdbcType=VARCHAR} , '%')
+				 AND (<![CDATA[@rownum]]>:=0)=0
+			</when>
+			<when test="'30' == searchDiv">
+				 SEAT_NM LIKE CONCAT('%' , #{searchWord, jdbcType=VARCHAR} , '%')
+				 AND (<![CDATA[@rownum]]>:=0)=0
+			</when>
+			<when test="'40' == searchDiv">
+				 SEAT_Y LIKE CONCAT('%' , #{searchWord, jdbcType=VARCHAR} , '%')
+				 AND (<![CDATA[@rownum]]>:=0)=0
+			</when>
+			<when test="'50' == searchDiv">
+				 SEAT_X LIKE CONCAT('%' , #{searchWord, jdbcType=VARCHAR} , '%')
+				 AND (<![CDATA[@rownum]]>:=0)=0
+			</when>
+			<when test="'60' == searchDiv">
+				 USE_YN LIKE CONCAT('%' , #{searchWord, jdbcType=VARCHAR} , '%')
+				 AND (<![CDATA[@rownum]]>:=0)=0
+			</when>
+			<when test="'70' == searchDiv">
+				 SCREEN_ID LIKE CONCAT('%' , #{searchWord, jdbcType=VARCHAR} , '%')
+				 AND (<![CDATA[@rownum]]>:=0)=0
+			</when>
+			<otherwise>(<![CDATA[@rownum]]>:=0)=0</otherwise>
+		</choose>
+	</where>
+	</sql>
+	 
+	<delete id="do_delete" parameterType="Seat">
+		DELETE FROM SEAT WHERE ROOM_ID = #{roomId, jdbcType=VARCHAR}
+	</delete>
+	
+	<select id="do_selectOne" parameterType="Seat" resultType="Seat">
+		SELECT
+			BRANCH_ID as branchId,
+		    ROOM_ID as roomId,
+			SEAT_NM as seatNm,
+			SEAT_Y as seatY,
+			SEAT_X as seatX,
+			USE_YN as useYN
+		FROM
+		    SEAT
+		WHERE
+		    SEAT_NM = #{seatNm, jdbcType=VARCHAR}
+	</select>
+	 
+	<select id="do_save" parameterType="Seat">
+		INSERT INTO SEAT (
+		    BRANCH_ID,
+		    ROOM_ID,
+		    SEAT_NM,
+		    SEAT_Y,
+			SEAT_X,
+			USE_YN
+		) VALUES (
+		    #{branchId, jdbcType=VARCHAR},
+		    #{roomId, jdbcType=VARCHAR},
+		    CONCAT(#{seatY, jdbcType=VARCHAR} , #{seatX, jdbcType=NUMERIC}),
+		    #{seatY, jdbcType=VARCHAR},
+		    #{seatX, jdbcType=NUMERIC},
+		    #{useYN, jdbcType=VARCHAR}
+		)
+	</select>
+	
+	<select id="do_retrieve" parameterType="Search" resultType="Seat">
+		SELECT T.RNUM as NUM
+			  ,T.BRANCH_ID as branchId
+			  ,T.ROOM_ID as roomId
+			  ,T.SEAT_NM as seatNm
+			  ,T.SEAT_Y as seatY
+			  ,T.SEAT_X as seatX
+			  ,T.USE_YN as useYN
+		FROM(
+		    SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS RNUM, A.*
+		    FROM(
+		         SELECT *
+		         FROM SEAT
+		         <include refid="baseCondition"/>
+		        )A
+		    )T
+		     WHERE CEIL(T.RNUM/ #{pageSize, jdbcType=VARCHAR} ) = #{pageNum, jdbcType=VARCHAR}
+		ORDER BY 1, 2, 3
+	</select>
+
+	<update id="do_update" parameterType="Seat">
+		UPDATE SEAT
+		SET
+			USE_YN = #{useYN, jdbcType=NUMERIC}
+		WHERE ROOM_ID = #{roomId, jdbcType=VARCHAR}
+		AND SEAT_NM = #{seatNm, jdbcType=VARCHAR}
+	</update>
+	
+	<select id="do_save_reservation" parameterType="Seat">
+		INSERT INTO SEAT_RESERVATION (
+		    BRANCH_ID,
+		    ROOM_ID,
+		    SEAT_NM,
+		    SEAT_Y,
+			SEAT_X,
+			USE_YN,
+			SCREEN_ID,
+			REG_DT
+		)
+        SELECT *
+		FROM
+		(
+		SELECT a.BRANCH_ID,
+		    a.ROOM_ID,
+		    a.SEAT_NM,
+		    a.SEAT_Y,
+			a.SEAT_X,
+			a.USE_YN,
+			b.screenId,
+			NOW()
+		FROM SEAT a,
+			(
+			SELECT #{screenId, jdbcType=VARCHAR} as screenId
+			FROM DUAL
+			)b
+		WHERE a.ROOM_ID = #{roomId, jdbcType=VARCHAR}
+		) T1
+	</select>
+	
+	<select id="do_retrieve_reservation" parameterType="Search" resultType="Seat">
+		SELECT T.RNUM as NUM
+			  ,T.BRANCH_ID as branchId
+			  ,T.ROOM_ID as roomId
+			  ,T.SEAT_NM as seatNm
+			  ,T.SEAT_Y as seatY
+			  ,T.SEAT_X as seatX
+			  ,T.USE_YN as useYN
+			  ,SCREEN_ID as screenId
+		FROM(
+		    SELECT <![CDATA[@rownum]]>:=<![CDATA[@rownum]]>+1 AS RNUM, A.*
+		    FROM(
+		         SELECT *
+		         FROM SEAT_RESERVATION
+		         <include refid="baseCondition"/>
+		        )A
+		    )T
+		WHERE CEIL(T.RNUM/ #{pageSize, jdbcType=VARCHAR} ) = #{pageNum, jdbcType=VARCHAR}
+		ORDER BY 1, 2, 3
+	</select>
+
+	<update id="do_update_reservation" parameterType="Seat">
+		UPDATE SEAT_RESERVATION
+		SET
+			USE_YN = #{useYN, jdbcType=NUMERIC}
+		WHERE ROOM_ID = #{roomId, jdbcType=VARCHAR}
+		AND SCREEN_ID = #{screenId, jdbcType=VARCHAR}
+		AND SEAT_NM = #{seatNm, jdbcType=VARCHAR}
+	</update>
+	
+	<delete id="do_delete_reservation" parameterType="Seat">
+		DELETE FROM SEAT_RESERVATION
+		WHERE SCREEN_ID = #{screenId, jdbcType=VARCHAR}
+	</delete>
+	
+	<delete id="do_deleteAll_reservation">
+		DELETE FROM SEAT_RESERVATION
+		WHERE DATE_ADD(REG_DT, INTERVAL 90 DAY) <![CDATA[<=]]> NOW()
+	</delete>
+	
+	<select id="do_selectOne_reservation" parameterType="Seat" resultType="Seat">
+		SELECT
+			BRANCH_ID as branchId,
+		    ROOM_ID as roomId,
+			SEAT_NM as seatNm,
+			SEAT_Y as seatY,
+			SEAT_X as seatX,
+			USE_YN as useYN,
+			SCREEN_ID as screenId
+		FROM
+		    SEAT_RESERVATION
+		WHERE
+		    SEAT_NM = #{seatNm, jdbcType=VARCHAR}
+		AND
+			SCREEN_ID = #{screenId, jdbcType=VARCHAR}
+	</select>
+</mapper>

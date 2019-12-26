@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>	
+<!DOCTYPE mapper	
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"	
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">	
+<mapper namespace="kr.co.sunnyside.coupon">
+
+
+	<!-- 쿠폰 여러장 가져오기 -->
+	<select id="do_retrieve" parameterType="SJH_CouponVO" resultType="SJH_CouponVO">
+		SELECT
+		    coupon_code as couponCode,
+		    user_id as userId,
+		    coupon_nm as couponNm,
+		    usable,
+		    use_dt as useDt,
+		    discount,
+		    reg_dt as regDt
+		FROM
+		    USER_COUPON
+		WHERE
+		    user_id = #{userId,jdbcType=VARCHAR}
+		AND
+			use_dt <![CDATA[>=]]> NOW()
+	</select>
+	
+
+	<!-- 쿠폰 하나 가져오기 -->
+	<select id="do_selectOne" parameterType="SJH_CouponVO" resultType="SJH_CouponVO">
+		SELECT
+		    coupon_code as couponCode,
+            user_id as userId,
+		    coupon_nm as couponNm,
+		    usable,
+		    use_dt as useDt,
+		    discount,
+            reg_dt as regDt
+		FROM
+		    USER_COUPON
+		WHERE
+		    user_id = #{userId,jdbcType=VARCHAR}
+        AND 
+            reg_dt = NOW()
+	</select>
+
+
+
+	<!-- 쿠폰등록 -->
+	<insert id="do_save" parameterType="SJH_CouponVO" >
+		INSERT INTO USER_COUPON (
+		    coupon_code,
+		    user_id,
+		    coupon_nm,
+		    usable,
+		    use_dt,
+		    discount,
+		    reg_dt
+		) VALUES (
+		    SUBSTR(CONCAT(MD5(RAND()),MD5(RAND())),1,15),
+		    #{userId,jdbcType=VARCHAR},
+		    '영화 3천원 할인쿠폰',
+		    IFNULL(#{usable,jdbcType=VARCHAR},0),
+		    DATE_ADD(NOW(), INTERVAL 1 DAY),
+		    3000,
+		    NOW()
+        )
+
+	</insert>
+	
+	
+	<!-- 쿠폰삭제 (사용 시) -->
+	<delete id="do_delete" parameterType="SJH_CouponVO">
+		DELETE FROM USER_COUPON
+		WHERE
+		    coupon_code = #{couponCode,jdbcType=VARCHAR}
+		    AND user_id = #{userId,jdbcType=VARCHAR}
+	</delete>
+	
+	
+	<!-- 쿠폰업데이트 -->
+	<update id="do_update" parameterType="SJH_CouponVO">
+		UPDATE USER_COUPON
+		SET
+		    USABLE = #{usable,jdbcType=VARCHAR}
+		WHERE
+		    coupon_code = #{couponCode,jdbcType=VARCHAR}
+		    AND user_id = #{userId,jdbcType=VARCHAR}
+	</update>
+</mapper>
